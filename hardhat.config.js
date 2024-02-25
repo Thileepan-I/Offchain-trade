@@ -2,7 +2,16 @@ require("@nomicfoundation/hardhat-toolbox");
 require('dotenv').config();
 
 module.exports = {
-  defaultNetwork: "sepolia",
+  solidity: {
+    version: "0.8.20",
+    settings: {
+      optimizer: {
+        enabled: true,
+      },
+      viaIR:true,
+    },
+  },
+  defaultNetwork: "hardhat",
   networks: {
     localhost: {
       url: "http://127.0.0.1:8545",
@@ -29,15 +38,6 @@ module.exports = {
       chainId: 56,
       gasPrice: 20000000000,
       accounts: [process.env.PRIVATE_KEY],
-    },
-  },
-  solidity: {
-    version: "0.8.20",
-    settings: {
-      optimizer: {
-        enabled: true,
-      },
-      viaIR:true,
     },
   },
   etherscan: {

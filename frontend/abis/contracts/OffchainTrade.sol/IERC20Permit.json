@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
   "contractName": "IERC20Permit",
-  "sourceName": "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol",
+  "sourceName": "contracts/OffchainTrade.sol",
   "abi": [
     {
       "inputs": [],
