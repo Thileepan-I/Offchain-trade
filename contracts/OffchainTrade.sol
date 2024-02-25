@@ -831,7 +831,7 @@ contract OffchainTrade is ReentrancyGuard {
             if (!ok) revert TransactionFailed();
         }
 
-        emit FundsReleased(_buyer, _orderId);
+        emit FundsReleased(_buyer, _orderId);   
 }
 
     function recoverSignedAddress(bytes32 _hash, bytes memory _sign) public pure returns (address recoveredAddress) {

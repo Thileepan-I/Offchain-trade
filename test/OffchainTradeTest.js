@@ -13,6 +13,22 @@ describe("OffchainTrade Contract", function () {
     return { offchainTrade,testToken, owner, seller, buyer, addr1 };
   }
 
+  async function signOrderMessage(account, buyerAddress, message) {
+    // Step 1: Hash the original message
+    const originalMessageHash = ethers.solidityPackedKeccak256(["address", "uint256"], [buyerAddress, message]);
+    
+    // Note: In Foundry, the message is prefixed and hashed again. In Ethers.js, we simulate this by signing the original hash directly.
+    // Ethers.js's signMessage method will automatically prefix the message with "\x19Ethereum Signed Message:\n32" and hash it again internally.
+
+    // Step 2: Sign the message hash
+    const signature = await account.signMessage(ethers.getBytes(originalMessageHash));
+
+    // The signature is now in the format that the Ethereum network and your contract's verification method expects.
+    // If you need to split the signature into r, s, and v components for any reason, you can do so using ethers.js utilities.
+    return signature;
+}
+  
+
   // console.log(ethers.parseEther("1"));
 
   it("should allow a seller to list an order with ETH", async function () {
@@ -46,4 +62,42 @@ describe("OffchainTrade Contract", function () {
     const allowance = await testToken.allowance(seller.address, offchainTrade.target);
     expect(allowance).to.equal(tokenAmount);
   });
+
+  it("should allow a user to register as a buyer for an order", async function () {
+    const { offchainTrade, seller, buyer } = await loadFixture(deployContract);
+    // Listing an order as a seller with ETH for simplicity
+    const amount = ethers.parseEther("1");
+    await offchainTrade.connect(seller).listOrderAsSeller(1, ethers.ZeroAddress, { value: amount.toString() });
+
+    // Registering as a buyer for the order
+    const orderId = 1; // Assuming this is the first and only order so far
+    await expect(offchainTrade.connect(buyer).registerAsBuyer(orderId, 12345))
+      .to.emit(offchainTrade, "RegisterAsBuyer")
+      .withArgs(buyer.address, orderId);
+});
+
+it("should allow the seller to release funds to the registered buyer", async function () {
+  const { offchainTrade, seller, buyer } = await loadFixture(deployContract);
+  // Listing an order with ETH by the seller
+
+
+  const orderAmount = ethers.parseEther("1");
+  console.log(orderAmount,orderAmount.toString())
+  await offchainTrade.connect(seller).listOrderAsSeller(orderAmount.toString(), ethers.ZeroAddress, { value: orderAmount.toString() });
+  console.log(ethers.ZeroAddress);
+
+  // Registering as a buyer for the order
+  const orderId = 1; // The orderId of the previously listed order
+  await offchainTrade.connect(buyer).registerAsBuyer(orderId, 12345);
+
+  // Generating a valid signature
+  const message = 12345; // Example message, could be a nonce or order-specific data
+  const signature = await signOrderMessage(seller, orderId, buyer.address, message);
+console.log(signature);
+  // Releasing funds using the valid signature
+  await expect(offchainTrade.connect(seller).releaseFunds(orderId, signature, buyer.address))
+    .to.emit(offchainTrade, "FundsReleased")
+    .withArgs(buyer.address, orderId);
+});
+
 });
